@@ -9,4 +9,8 @@ pub enum Error
 	Allocation(#[from] super::resources::Error),
 	#[error("Nitro CLI error: {0}")]
 	NitroCli(String),
+	#[error("Config file cannot include cpu_count and cpu_pool tag at the same time")]
+	BothOptionsForCpu,
+	#[error("Old config file detected or config file corrupted see release notes: ")]
+	OldConfigFile,
 }

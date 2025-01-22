@@ -7,7 +7,7 @@ pub enum Error
 	Io(#[from] std::io::Error),
 	#[error(transparent)]
 	ParseInt(#[from] std::num::ParseIntError),
-	#[error("failed to configure requested memory, this indicates insufficient system resources")]
+	#[error("failed to configure requested memory, this indicates insufficient system resources. Rebooting the system might solve the issue")]
 	InsufficientMemory,
 	#[error("unexpected sysfs file structure")]
 	UnexptectedFileStructure,
@@ -30,12 +30,6 @@ impl Allocation
 			numa_node,
 			allocated_pages,
 		})
-	}
-	pub fn get_numa_node(&self) -> usize {
-		self.numa_node
-	}
-	pub fn get_allocated_pages(&self) -> Pages {
-		self.allocated_pages.clone()
 	}
 	pub fn release_resources(&self){
 		if let Err(error) = release_huge_pages(self.numa_node, &self.allocated_pages)
@@ -122,7 +116,15 @@ pub fn release_huge_pages(numa_node: usize, allocated_pages: &Pages)
 
 	Ok(())
 }
-
+pub fn release_all_huge_pages(numa_node: usize) -> Result<(), Error> {
+	for page_size in get_huge_page_sizes(numa_node)?.into_iter().rev()
+	{
+		let huge_pages_path =
+			format!("/sys/devices/system/node/node{numa_node}/hugepages/hugepages-{page_size}kB/nr_hugepages");
+		std::fs::write(&huge_pages_path, "0")?;
+	}
+	Ok(())
+}
 fn get_huge_page_sizes(numa_node: usize) -> Result<PageSizes, Error>
 {
 	let path = format!("/sys/devices/system/node/node{numa_node}/hugepages");

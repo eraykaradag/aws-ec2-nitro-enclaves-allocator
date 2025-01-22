@@ -1,4 +1,4 @@
-type CpuSet = std::collections::BTreeSet::<usize>;
+pub type CpuSet = std::collections::BTreeSet::<usize>;
 type CpuSets = std::collections::HashMap::<usize, CpuSet>;
 
 #[derive(thiserror::Error, Debug)]
@@ -12,6 +12,8 @@ pub enum Error
 	MissingCpuPoolFile,
 	#[error("unexpected sysfs file structure")]
 	UnexptectedFileStructure,
+	#[error("failed to configure requested cpu pool, this indicates insufficient system resources")]
+	InsufficientCpuPool,	
 }
 
 const CPU_POOL_FILE: &str = "/sys/module/nitro_enclaves/parameters/ne_cpus";
@@ -36,9 +38,6 @@ impl Allocation
 	pub fn cpu_count(&self) -> usize
 	{
 		self.cpu_set.len()
-	}
-	pub fn get_cpu_set(&self) -> CpuSet {
-		self.cpu_set.clone()
 	}
 }
 
@@ -140,7 +139,7 @@ fn get_numa_node_count() -> Result<usize, Error>
 	Ok(get_numa_nodes(node_path)?.len())
 }
 
-fn get_numa_node_for_cpu(cpu: usize) -> Result<usize, Error>
+pub fn get_numa_node_for_cpu(cpu: usize) -> Result<usize, Error>
 {
 	let cpu_path = format!("/sys/devices/system/cpu/cpu{cpu}");
 
@@ -217,7 +216,7 @@ fn set_cpu_pool(cpu_set: &CpuSet) -> Result<(), Error>
 	}?)
 }
 
-fn parse_cpu_list(cpu_list: &str) -> Result<CpuSet, Error>
+pub fn parse_cpu_list(cpu_list: &str) -> Result<CpuSet, Error>
 {
 	cpu_list.trim().split_terminator(',')
 		.try_fold(CpuSet::new(), |mut set, entry|
@@ -238,7 +237,7 @@ fn parse_cpu_list(cpu_list: &str) -> Result<CpuSet, Error>
 		})
 }
 
-fn format_cpu_list(cpu_set: &CpuSet) -> String
+pub fn format_cpu_list(cpu_set: &CpuSet) -> String
 {
 	let mut cpu_set = cpu_set.iter();
 
