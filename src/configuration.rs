@@ -13,10 +13,13 @@ pub enum ResourcePool {
 pub fn get_resource_pool_from_config()  -> Result<Vec<ResourcePool>, Box<dyn std::error::Error>> {
     //config file deserializing
     let f = std::fs::File::open("/etc/nitro_enclaves/allocator.yaml")?;
-    let mut pool: Vec<ResourcePool> =  match serde_yaml::from_reader(f) {
+    let pool: Vec<ResourcePool> =  match serde_yaml::from_reader(f) {
         Ok(pool) => pool,
-        Err(e) => {return Err(Box::new(Error::ConfigFileCorruption));},//error messages use anyhow
+        Err(_) => {return Err(Box::new(Error::ConfigFileCorruption));},//error messages use anyhow
     };
+    if pool.len() > 4 {
+       eprintln!("{}",Error::MoreResourcePoolThanSupported);
+    }
     Ok(pool)
 }
 pub fn get_current_allocated_cpu_pool() -> Result<Option<std::collections::BTreeSet::<usize>>, Box<dyn std::error::Error>> {

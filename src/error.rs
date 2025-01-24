@@ -11,6 +11,8 @@ pub enum Error
 	NitroCli(String),
 	#[error("Config file cannot include cpu_count and cpu_pool tag at the same time")]
 	BothOptionsForCpu,
-	#[error("Invalid config file: This might happened due to old config file or config file corruption. See release notes :")]
+	#[error("Invalid config file. This might happened due to old config file or config file corruption. See release notes :")]
 	ConfigFileCorruption,
+	#[error("WARNING! Requested resource pool is more than supported. Supported Enclave number is 4")]
+	MoreResourcePoolThanSupported,
 }

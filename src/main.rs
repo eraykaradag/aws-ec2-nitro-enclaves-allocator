@@ -15,7 +15,7 @@ fn main()  -> Result<(), Box<dyn std::error::Error>> {
 					return Err(Box::new(e));
 				},//proper error messages				
 			};
-      		match resources::Allocation::find_n_allocate(pool,numa_node) {
+      		match resources::Allocation::allocate_by_cpu_count(pool,numa_node) {
 				Ok(_) => {},
 				Err(e) => {
 					let _ = configuration::clear_everything_in_numa_node();

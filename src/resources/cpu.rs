@@ -34,11 +34,6 @@ impl Allocation
 			cpu_set,
 		})
 	}
-
-	pub fn cpu_count(&self) -> usize
-	{
-		self.cpu_set.len()
-	}
 }
 
 /*impl Drop for Allocation
