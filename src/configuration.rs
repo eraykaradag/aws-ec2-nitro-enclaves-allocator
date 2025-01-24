@@ -4,27 +4,22 @@ use crate::error::Error;
 
 //deserializing from allocator.yaml file
 #[derive(Debug, PartialEq, Deserialize,Clone)]
-pub struct ResourcePool{
-    pub memory_mib: usize,
-    pub cpu_count: Option<usize>,
-    pub cpu_pool: Option<String>,
+#[serde(deny_unknown_fields)]
+#[serde(untagged)]
+pub enum ResourcePool {
+    CpuCount { memory_mib: usize , cpu_count: usize},
+    CpuPool { cpu_pool: String, memory_mib: usize },
 }
-pub fn get_resource_pool()  -> Result<Vec<ResourcePool>, Box<dyn std::error::Error>> {
+pub fn get_resource_pool_from_config()  -> Result<Vec<ResourcePool>, Box<dyn std::error::Error>> {
     //config file deserializing
     let f = std::fs::File::open("/etc/nitro_enclaves/allocator.yaml")?;
     let mut pool: Vec<ResourcePool> =  match serde_yaml::from_reader(f) {
         Ok(pool) => pool,
-        Err(ExpectedArray) => {return Err(Box::new(Error::OldConfigFile));},
+        Err(e) => {return Err(Box::new(Error::ConfigFileCorruption));},//error messages use anyhow
     };
-    for enclave in &pool {
-        if enclave.cpu_pool.is_some() && enclave.cpu_count.is_some() {
-            return Err(Box::new(Error::BothOptionsForCpu));
-        }
-    }
-    //pool.enclaves.sort_by_key(|p| p.memory_mib);
     Ok(pool)
 }
-pub fn get_cpu_pool() -> Result<Option<std::collections::BTreeSet::<usize>>, Box<dyn std::error::Error>> {
+pub fn get_current_allocated_cpu_pool() -> Result<Option<std::collections::BTreeSet::<usize>>, Box<dyn std::error::Error>> {
     let f = std::fs::read_to_string("/sys/module/nitro_enclaves/parameters/ne_cpus")?;
     if f.trim().is_empty() {
         return Ok(None);
@@ -33,8 +28,8 @@ pub fn get_cpu_pool() -> Result<Option<std::collections::BTreeSet::<usize>>, Box
     Ok(Some(cpu_list))
 }
 //clears everything in a numa node.
-pub fn crystal_clear() -> Result<(), Box<dyn std::error::Error>> {
-    match get_cpu_pool()?{
+pub fn clear_everything_in_numa_node() -> Result<(), Box<dyn std::error::Error>> {//change the name
+    match get_current_allocated_cpu_pool()?{
 		Some(cpu_list) => {
 		//find numa by one of cpuids
 		let numa = resources::cpu::get_numa_node_for_cpu(cpu_list.clone().into_iter().next().unwrap())?;
@@ -46,3 +41,4 @@ pub fn crystal_clear() -> Result<(), Box<dyn std::error::Error>> {
   	};
     Ok(())
 }
+

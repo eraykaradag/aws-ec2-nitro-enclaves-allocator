@@ -4,9 +4,9 @@ mod configuration;
 
 
 fn main()  -> Result<(), Box<dyn std::error::Error>> {
-	let _ = configuration::crystal_clear();
+	let _ = configuration::clear_everything_in_numa_node();
 
-	match configuration::get_resource_pool() {
+	match configuration::get_resource_pool_from_config() {
     	Ok(pool) => {			
 			let numa_node = match resources::Allocation::allocate_by_cpu_pools(pool.clone()){
 				Ok(numa) => numa,
@@ -18,11 +18,11 @@ fn main()  -> Result<(), Box<dyn std::error::Error>> {
       		match resources::Allocation::find_n_allocate(pool,numa_node) {
 				Ok(_) => {},
 				Err(e) => {
-					let _ = configuration::crystal_clear();
+					let _ = configuration::clear_everything_in_numa_node();
 					eprintln!(" Allocation failed: {}",e);
 					return Err(Box::new(e));
 				}
-			} //check if allocation successful or not, if not crystal clear
+			} //check if allocation successful or not, if not clear what you allocated previously
     	}
     	Err(e) => {
 			eprintln!("Allocation failed: {}",e);

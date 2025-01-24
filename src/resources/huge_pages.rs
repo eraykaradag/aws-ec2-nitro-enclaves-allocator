@@ -80,7 +80,7 @@ fn configure_huge_pages(numa_node: usize, memory_mib: usize) -> Result<Pages, Er
 		if actual_allocated_pages > 0
 		{
 			allocated_pages.insert(page_size, actual_allocated_pages);
-			remaining_memory -= page_size * actual_allocated_pages;
+			remaining_memory = remaining_memory.saturating_sub(page_size * actual_allocated_pages);
 		}
 
 		if remaining_memory == 0
