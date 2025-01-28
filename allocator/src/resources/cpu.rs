@@ -20,6 +20,7 @@ const CPU_POOL_FILE: &str = "/sys/module/nitro_enclaves/parameters/ne_cpus";
 
 pub struct Allocation
 {
+	#[allow(dead_code)]
 	cpu_set: CpuSet,
 }
 

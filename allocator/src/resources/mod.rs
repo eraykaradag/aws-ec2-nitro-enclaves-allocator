@@ -22,12 +22,14 @@ pub enum Error
 pub struct Allocation
 {
 	// Both allocations implement Drop
+	#[allow(dead_code)]
 	cpu_set_allocation: cpu::Allocation,
 	_huge_pages_allocation: huge_pages::Allocation,
 }
 
 impl Allocation
 {
+	#[allow(dead_code)]
 	pub fn new(cpu_count: usize, memory_mib: usize) -> Result<Self, Error>
 	{
 		// Find NUMA nodes with a suitable CPU set
